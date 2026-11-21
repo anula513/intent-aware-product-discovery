@@ -221,3 +221,17 @@ __marimo__/
 
 # Streamlit
 .streamlit/secrets.toml
+
+# ---- Project-specific ----
+
+# H&M data: too big for GitHub + licensed, never commit
+data/raw/
+data/processed/
+
+# AI assistant instructions (lesson from Project 1)
+CLAUDE.md
+
+# Big generated files: FAISS indexes and model weights
+*.faiss
+*.pt
+*.bin
