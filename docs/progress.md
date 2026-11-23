@@ -9,7 +9,9 @@
   - Used Python 3.13, not my default 3.14, since ML libraries (PyTorch, FAISS) lag on new Python versions. Docker will use the same version.
   - pip installed nothing the first time because requirements.txt wasn't saved. Turned on auto-save.
   - Verified .env is ignored with git check-ignore (.gitignore line 153) before the first commit
-  - Timeline: ~20 hrs/week isn't enough for everything before the interview, so fine-tuning, the final test eval, and the A/B test moved to after it
-- Next: Phase 2: download the H&M dataset from Kaggle, explore it (EDA), then subsample and do the time-based split
-- Blockers: none
-- AI usage: Claude drafted the charter (I reviewed it section by section), wrote the .gitignore project rules and pinned versions at my request, and explained each concept and command. I ran all commands and made the decisions (pivot, Python version, timeline).
+
+
+
+11/22/2026
+Done: downloaded data (official source), read the license, EDA notebook, EDA report, data README, charter license update
+Finding: top-12 overlap 0/12 → recent-popularity baseline; cold start = 3.98% of final-week purchases; split dates decided; pyarrow reader drops leading zeros

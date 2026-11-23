@@ -29,6 +29,7 @@ A search and recommendation engine over a real fashion catalog (H&M), with a web
 4. **Explains** each result in one line, and shows the user how it understood the query ("Here's what I understood" chips).
 5. **Guards its output.** Code checks that every product ID the agent returns exists in the catalog and that no result violates an explicit exclusion.
 6. Served through **FastAPI**, packaged with **Docker**, **deployed** with a rate limit and spend limit, with latency/cost logging and a **Streamlit** UI, including a side-by-side "keyword vs engine" demo mode.
+7. **Catalog-agnostic.** The catalog is one swappable input. H&M data is used privately for all training and evaluation; the **public demo runs on a separate, openly licensed fashion catalog**, because H&M's terms don't allow redistribution (decided 2026-11-21, see Section 7).
 
 ## 4. What this project can and cannot claim
 **Data:** H&M Personalized Fashion Recommendations (Kaggle): product metadata and images, customers, and about two years of transactions. Exact sizes are confirmed in Phase 2.
@@ -44,6 +45,7 @@ A search and recommendation engine over a real fashion catalog (H&M), with a web
 - That search results match how real H&M shoppers search. H&M did not release search queries; my queries are LLM-generated from product attributes, with a hand-checked sample.
 - Real prices. Prices in the dataset are scaled, so "under $50" style filters are out of scope.
 - Results on other stores, languages, or product categories outside the dataset.
+- Metrics for the public demo catalog. All reported numbers come from H&M; the demo catalog has no purchase history, so it is for demonstration only.
 
 ## 5. Scope
 **In scope (v1)**
@@ -59,6 +61,7 @@ A search and recommendation engine over a real fashion catalog (H&M), with a web
 - Streamlit UI: search, product page with similar items, side-by-side demo mode, metrics page
 - Blind A/B with real users, feedback recorded
 - README I write myself, including "How I used AI" and "Limitations"
+- Public demo catalog: choose an openly licensed fashion catalog and verify its license on the original source page (Week 5)
 
 **Out of scope (v1)**
 - Personalization per logged-in customer (user accounts, history-based ranking for a specific user)
@@ -100,7 +103,7 @@ Every number gets labeled by its split:
 | Leakage: using future purchases to predict the test week | Inflated recommendation scores | Strict time-based split; all features built from training weeks only |
 | Test contamination (happened in Project 1 with held-out question h6) | Numbers stop being honest | Test queries and test week locked until final eval; tuning only on dev/val |
 | Dataset size (tens of millions of transactions, many GB of images) | Laptop/Colab crashes, slow iteration | Subsample by time window and product set; embed images in Colab, save vectors |
-| Dataset license / image rights | Can't redistribute H&M data or images | Check the competition terms in Phase 2; never commit raw data; adjust the public demo if images can't be shown |
+| Dataset license / image rights | **Confirmed 2026-11-21:** H&M data is for non-commercial use and academic research only and may not be redistributed (Kaggle rules, section 7) | Never commit raw data or notebook outputs; eval files store only my synthetic queries + product IDs; public demo uses a separate openly licensed catalog |
 | Popularity baseline is very strong in fashion | "Fancy" methods may not beat it | Report honestly; that's a valid finding |
 | LLM agent misreads queries or invents products | Wrong results, broken trust | Structured outputs, ID check (#6), exclusion check (#4) |
 | API credits burned by strangers | Real money | Spend limit on provider, rate limit + input limits on the API |
@@ -108,17 +111,24 @@ Every number gets labeled by its split:
 | Timeline slip (Project 1 deploy landed ~3 weeks late) | Deploy and eval skipped again | Rule: cut stretch work (CLIP extras, reranker), never deploy or eval |
 
 ## 8. Timeline
-Planned pace: about 3 focused hours per day. ⚠️ DECIDE: adjust around finals and the interview date.
+**Pace:** up to 2 hours per weekday and up to 5 hours per weekend day, about 20 hours per week. If winter break frees up more weekday time, the extra goes to buffer, not new features.
 
-| Week | Dates (proposal) | Phases |
-|------|------------------|--------|
-| 1 | Nov 21 - Nov 27 | 0 Framing, 1 Setup, 2 Data (EDA, subsample, time split) |
-| 2 | Nov 28 - Dec 4 | 3 Baselines (BM25 + popularity), eval query set, first dev/val numbers |
-| 3 | Dec 5 - Dec 11 | Embeddings, FAISS, hybrid, content-based recs, cold-start eval |
-| 4 | Dec 12 - Dec 18 | 4 Fine-tuning (Colab), CLIP, 5 final test eval + error analysis |
-| 5 | Dec 19 - Dec 25 | 6 Agent, 7 API, 8 Tests |
-| 6 | Dec 26 - Jan 1 | 9 Docker, 10 Deploy, 11 Monitoring, 12 UI |
-| 7 | Jan 2 - Jan 8 | 13 Real users (blind A/B), 14 README, 15 Resume + interview prep |
+**Hard date:** Depict CEO interview, first week of January 2027 (exact date TBD). Everything marked "interview-critical" must be live by **Jan 1**.
+
+| Week | Dates | Phases | Interview-critical? |
+|------|-------|--------|---------------------|
+| 1 | Nov 21 - Nov 27 | 0 Framing, 1 Setup, 2 Data (EDA, subsample, time split). Thanksgiving week, lighter | Yes |
+| 2 | Nov 28 - Dec 4 | Eval query set, metric functions + tests, BM25 + popularity baselines, **first dev/val numbers** | Yes |
+| 3 | Dec 5 - Dec 11 | Text embeddings, FAISS, hybrid search, co-purchase recs. Finals, lighter | Yes |
+| 4 | Dec 12 - Dec 18 | CLIP image embeddings, content-based recs, cold-start eval (val week), error analysis | Yes |
+| 5 | Dec 19 - Dec 25 | 6 Agent (filters, exclusions, ID check), 7 FastAPI, 8 Tests | Yes |
+| 6 | Dec 26 - Jan 1 | 9 Docker, 10 Deploy, 11 Logging, 12 Streamlit with side-by-side demo, short README | Yes |
+| Interview week | Jan 2 - ~Jan 8 | 2-minute walkthrough, demo rehearsal, likely questions | Yes |
+| After interview | January | 4 Fine-tuning, **final test-set evaluation** (once, after fine-tuning), 13 blind A/B with real users, 14 full README, 15 resume bullets | No |
+
+**Why the final test evaluation waits until after fine-tuning:** the test set is used once. If it were used in December and fine-tuning came later, the fine-tuned model would need a second look at the test set. So the interview demo uses **dev/val numbers, labeled as dev/val**, and the locked test numbers come in January.
+
+**If a week slips:** cut in this order: CLIP extras → co-purchase recs → agent explanation line. Never cut: the baselines, the eval, the deploy, or the side-by-side demo.
 
 ## 9. Tech stack
 - **Python, pandas:** data work
